@@ -17,6 +17,7 @@ from pathlib import Path
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from sqlalchemy.engine import make_url
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,7 +26,7 @@ from app.config import settings
 
 
 def parse_database_url(url: str) -> dict:
-    """Parse PostgreSQL database URL.
+    """Parse PostgreSQL database URL using SQLAlchemy's make_url.
 
     Args:
         url: Database URL in format postgresql://user:password@host:port/dbname
@@ -33,32 +34,14 @@ def parse_database_url(url: str) -> dict:
     Returns:
         Dictionary with connection parameters.
     """
-    # Remove postgresql:// prefix
-    url = url.replace("postgresql://", "")
-
-    # Split credentials and host
-    if "@" in url:
-        credentials, host_part = url.split("@")
-        username, password = credentials.split(":")
-    else:
-        raise ValueError("Invalid database URL format")
-
-    # Split host and database
-    host_port, dbname = host_part.split("/")
-
-    # Split host and port
-    if ":" in host_port:
-        host, port = host_port.split(":")
-    else:
-        host = host_port
-        port = "5432"
+    parsed = make_url(url)
 
     return {
-        "user": username,
-        "password": password,
-        "host": host,
-        "port": int(port),
-        "dbname": dbname,
+        "user": parsed.username,
+        "password": parsed.password,
+        "host": parsed.host,
+        "port": parsed.port or 5432,
+        "dbname": parsed.database,
     }
 
 
