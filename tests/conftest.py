@@ -17,14 +17,12 @@ from app.applicants.router import router as applicants_router
 from app.cases.router import router as cases_router
 from app.db import Base, get_db
 from app.health.router import router as health_router
-from app.users.router import router as users_router
 
 
 def start_application():
     app = FastAPI()
     app.include_router(cases_router)
     app.include_router(applicants_router)
-    app.include_router(users_router)
     app.include_router(admin_router)
     app.include_router(health_router)
     return app
@@ -62,7 +60,8 @@ def db_session(app: FastAPI) -> Generator[SessionTesting, Any, None]:  # type: i
 
 @pytest.fixture(scope="function")
 def client(
-    app: FastAPI, db_session: SessionTesting  # type: ignore
+    app: FastAPI,
+    db_session: SessionTesting,  # type: ignore
 ) -> Generator[TestClient, Any, None]:
     """
     Create a new FastAPI TestClient that uses the `db_session` fixture to override

@@ -15,13 +15,14 @@ The goal of this project is to provide a Python-based starter API, which comes p
 ## Table of Contents
 
 1. [Running the Project Locally](#running-the-project-locally)
-2. [Running with Docker](#running-with-docker)
-3. [Running Unit Tests](#running-unit-tests)
-4. [Running Code Quality Checks](#running-code-quality-checks)
-5. [Running Code Formatting](#running-code-formatting)
-6. [Publishing Updated Docs](#publishing-updated-docs)
-7. [Contributing](#contributing)
-8. [Next Steps](#next-steps)
+2. [Initializing PostgreSQL Database](#initializing-postgresql-database)
+3. [Running with Docker](#running-with-docker)
+4. [Running Unit Tests](#running-unit-tests)
+5. [Running Code Quality Checks](#running-code-quality-checks)
+6. [Running Code Formatting](#running-code-formatting)
+7. [Publishing Updated Docs](#publishing-updated-docs)
+8. [Contributing](#contributing)
+9. [Next Steps](#next-steps)
 
 ## Running the Project Locally
 
@@ -49,7 +50,8 @@ pip install -e ".[dev]"
 ```
 API_PREFIX=[SOME_ROUTE] # Ex: '/api'
 DATABASE_URL=[SOME_URL] # Ex: 'postgresql://username:password@localhost:5432/database_name'
-OIDC_CONFIG_URL=[SOME_URL] # Ex: 'https://token.actions.githubusercontent.com/.well-known/openid-configuration'
+OIDC_CONFIG_URL=[SOME_URL] # Ex: 'https://keycloak.auth.metrostar.cloud/auth/realms/dev/.well-known/openid-configuration'
+LOG_LEVEL=[LOG_LEVEL] # Ex: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' (Default: 'INFO')
 ```
 
 5. To start the app, run the following:
@@ -59,6 +61,47 @@ uvicorn app.main:app --reload --host=0.0.0.0 --port=5000
 ```
 
 6. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+
+## Initializing PostgreSQL Database
+
+If you're using PostgreSQL instead of SQLite, you can use the provided initialization script to set up your database:
+
+1. Ensure your `.env` file contains a PostgreSQL DATABASE_URL:
+
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+```
+
+2. Run the initialization script using either method:
+
+**Using the shell script:**
+
+```sh
+./scripts/init_db.sh
+```
+
+**Or using Python directly:**
+
+```sh
+python scripts/init_postgres.py
+```
+
+3. To seed initial data along with the schema (optional):
+
+```sh
+./scripts/init_db.sh --seed
+```
+
+**Script Options:**
+
+- `--seed`: Seed initial data after running migrations
+- `--skip-create`: Skip database creation (only run migrations)
+
+The script will:
+
+- Create the database if it doesn't exist
+- Run all Alembic migrations to set up the schema
+- Optionally seed initial data
 
 ## Running with Docker
 
@@ -136,7 +179,6 @@ The following provides a short list of tasks which are potential next steps for 
 
 - [ ] Add/Update existing endpoints with more applicable entities and/or columns
 - [ ] Update applicable endpoints to require JWT
-- [ ] Add Admin endpoints to support password reset
 - [ ] Replace default database with external database (Ex. Postgres)
 - [ ] Deploy to cloud infrastructure
 - [ ] Automate doc publishing process

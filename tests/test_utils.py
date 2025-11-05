@@ -4,9 +4,9 @@ from app.utils import get_next_page, get_page_count, get_prev_page
 def test_get_page_count():
     assert get_page_count(0, 10) == 0
     assert get_page_count(10, 10) == 1
-    assert get_page_count(11, 10) == 1
+    assert get_page_count(11, 10) == 2
     assert get_page_count(20, 10) == 2
-    assert get_page_count(21, 10) == 2
+    assert get_page_count(21, 10) == 3
     assert get_page_count(30, 10) == 3
 
 

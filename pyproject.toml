@@ -8,6 +8,7 @@ dependencies = [
   "alembic",
   "fastapi",
   "httpx",
+  "psycopg2-binary",
   "pydantic-settings",
   "python-dotenv",
   "python-jose[cryptography]",
@@ -37,6 +38,7 @@ exclude = [
     ".venv",
     "venv",
     "docs",
+    "scripts",
     "__pycache",
     "**/migrations/*",
 ]
