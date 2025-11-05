@@ -135,10 +135,10 @@ def update_item(db: Session, id: int, case: CaseUpdate):
         logger.warning("Case not found for update with id: %s", id)
         raise HTTPException(status_code=404, detail="Case not found")
 
-    if case.status is not None:
-        db_case.status = case.status
-    if case.assigned_to is not None:
-        db_case.assigned_to = case.assigned_to
+    # Dynamically update only the fields that are provided
+    update_data = case.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_case, field, value)
 
     db.add(db_case)
     db.commit()

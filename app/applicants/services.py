@@ -94,11 +94,10 @@ def update_item(db: Session, id: int, applicant: ApplicantUpdate):
         logger.warning("Applicant not found for update with id: %s", id)
         raise HTTPException(status_code=404, detail="Applicant not found")
 
-    # Only update fields that are provided (not None)
+    # Dynamically update only the fields that are provided
     update_data = applicant.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        if value is not None:
-            setattr(db_applicant, field, value)
+        setattr(db_applicant, field, value)
 
     db.add(db_applicant)
     db.commit()
