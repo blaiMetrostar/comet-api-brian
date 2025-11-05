@@ -28,7 +28,9 @@ def get_page_count(item_count: int, page_size: int):
     Returns:
         int: The total number of pages.
     """
-    return round(item_count / page_size)
+    if item_count == 0:
+        return 0
+    return (item_count + page_size - 1) // page_size
 
 
 def get_prev_page(page_number: int):  # noqa: E501
