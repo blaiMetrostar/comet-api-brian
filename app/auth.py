@@ -1,9 +1,11 @@
 import requests
 from fastapi import Depends, HTTPException
-from jose.backends import RSAKey
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose.jwt import decode, get_unverified_header
 
 from app.config import settings
+
+security = HTTPBearer()
 
 
 def get_keycloak_jwks():
@@ -14,24 +16,61 @@ def get_keycloak_jwks():
 
     Returns:
         list: List of JSON Web Keys from the OIDC provider.
+
+    Raises:
+        HTTPException: If OIDC_CONFIG_URL is not configured or request fails.
     """
     keycloak_well_known_url = settings.OIDC_CONFIG_URL
-    response = requests.get(keycloak_well_known_url)
-    well_known_config = response.json()
-    jwks_url = well_known_config["jwks_uri"]
-    jwks_response = requests.get(jwks_url)
-    jwks = jwks_response.json()
-    return jwks["keys"]
+
+    if not keycloak_well_known_url:
+        raise HTTPException(
+            status_code=500,
+            detail="OIDC_CONFIG_URL is not configured",
+        )
+
+    try:
+        response = requests.get(keycloak_well_known_url, timeout=5)
+        response.raise_for_status()
+        well_known_config = response.json()
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch OIDC configuration: {e!s}",
+        ) from e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid JSON response from OIDC provider: {e!s}",
+        ) from e
+
+    try:
+        jwks_url = well_known_config["jwks_uri"]
+        jwks_response = requests.get(jwks_url, timeout=5)
+        jwks_response.raise_for_status()
+        jwks = jwks_response.json()
+        return jwks["keys"]
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch JWKS: {e!s}",
+        ) from e
+    except (ValueError, KeyError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid JWKS response: {e!s}",
+        ) from e
 
 
-def validate_jwt(token: str = Depends(get_keycloak_jwks)):
+def validate_jwt(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
     """Validate a JSON Web Token (JWT) using JWKS from the OIDC provider.
 
     Extracts the key ID from the JWT header, finds the matching RSA key
     in the JWKS, and decodes/validates the token.
 
     Args:
-        token: JWT token to validate.
+        credentials: HTTP Authorization credentials containing the JWT token.
 
     Returns:
         dict: Decoded JWT payload containing user claims.
@@ -39,24 +78,49 @@ def validate_jwt(token: str = Depends(get_keycloak_jwks)):
     Raises:
         HTTPException: If RSA key is not found (401) or JWT is invalid (401).
     """
-    header = get_unverified_header(token)
+    token = credentials.credentials
+
+    try:
+        header = get_unverified_header(token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid JWT token format: {e!s}",
+        ) from e
+
     jwks = get_keycloak_jwks()
 
     # Find the RSA key with the matching kid in the JWKS
     rsa_key = None
     for key in jwks:
-        if key["kid"] == header["kid"]:
-            rsa_key = RSAKey(
-                key=key["n"], alg=key["alg"], use=key["use"], kid=key["kid"]
-            )
+        if key.get("kid") == header.get("kid"):
+            rsa_key = {
+                "kty": key.get("kty"),
+                "kid": key.get("kid"),
+                "use": key.get("use"),
+                "n": key.get("n"),
+                "e": key.get("e"),
+            }
             break
 
     if rsa_key is None:
-        raise HTTPException(status_code=401, detail="RSA Key not found in JWKS")
+        # Provide helpful debugging information
+        available_kids = [key.get("kid") for key in jwks]
+        token_kid = header.get("kid")
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                f"RSA Key not found in JWKS. Token kid: {token_kid}, "
+                f"Available kids: {available_kids}"
+            ),
+        )
 
     try:
         payload = decode(token, rsa_key, algorithms=[header["alg"]])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid JWT token") from Exception
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid JWT token: {e!s}",
+        ) from e
 
     return payload
