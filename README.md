@@ -179,7 +179,6 @@ The following provides a short list of tasks which are potential next steps for 
 
 - [ ] Add/Update existing endpoints with more applicable entities and/or columns
 - [ ] Update applicable endpoints to require JWT
-- [ ] Add Admin endpoints to support password reset
-- [x] Replace default database with external database (Ex. Postgres) - use `scripts/init_postgres.py`
+- [ ] Replace default database with external database (Ex. Postgres)
 - [ ] Deploy to cloud infrastructure
 - [ ] Automate doc publishing process
