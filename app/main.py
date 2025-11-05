@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,9 +8,16 @@ from app.applicants.router import router as applicants_router
 from app.cases.router import router as cases_router
 from app.db import Base, engine
 from app.health.router import router as health_router
+from app.utils import setup_logging
+
+# Configure logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 # Create the app
 app = FastAPI()
+logger.info("FastAPI application initialized")
+
 # Set up CORS middleware
 # TODO: Restrict origins for production use
 app.add_middleware(
@@ -18,10 +27,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info("CORS middleware configured")
+
 # Create database
 Base.metadata.create_all(bind=engine)
+logger.info("Database tables created")
+
 # Add routes
 app.include_router(cases_router)
 app.include_router(applicants_router)
 app.include_router(admin_router)
 app.include_router(health_router)
+logger.info("API routes registered")

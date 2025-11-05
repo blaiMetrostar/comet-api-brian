@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = ""
     DATABASE_URL: str = "sqlite:///./db.sqlite3"
     OIDC_CONFIG_URL: str | None = None
+    LOG_LEVEL: str = "INFO"
 
 
 settings = Settings()

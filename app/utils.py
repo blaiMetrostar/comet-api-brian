@@ -1,3 +1,23 @@
+import logging
+
+from app.config import settings
+
+
+def setup_logging():
+    """Configure application-wide logging.
+
+    Sets up logging with the configured log level and format.
+    This should be called once at application startup.
+    """
+    logging.basicConfig(
+        level=settings.LOG_LEVEL,
+        format="%(levelname)s:     %(message)s - %(name)s:%(lineno)d",
+        handlers=[logging.StreamHandler()],
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("Logging configured with level: %s", settings.LOG_LEVEL)
+
+
 def get_page_count(item_count: int, page_size: int):
     """Calculate the total number of pages based on item count and page size.
 

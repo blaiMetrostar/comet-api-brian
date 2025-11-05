@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.cases.models import DBCase
 from app.cases.schemas import CaseCreate, CaseUpdate
 from app.utils import get_next_page, get_page_count, get_prev_page
+
+logger = logging.getLogger(__name__)
 
 
 def get_items(db: Session, page_number: int, page_size: int):
@@ -17,8 +21,10 @@ def get_items(db: Session, page_number: int, page_size: int):
     Returns:
         dict: Paginated response containing cases and pagination metadata.
     """
+    logger.debug("Fetching cases - page: %s, size: %s", page_number, page_size)
     item_count = db.query(DBCase).count()
     items = db.query(DBCase).limit(page_size).offset(page_number * page_size).all()
+    logger.info("Retrieved %s cases (total: %s)", len(items), item_count)
 
     return {
         "items": items,
@@ -39,10 +45,12 @@ def create_item(db: Session, case: CaseCreate):
     Returns:
         DBCase: The created case record.
     """
+    logger.debug("Creating new case with applicant_id: %s", case.applicant_id)
     db_case = DBCase(**case.model_dump())
     db.add(db_case)
     db.commit()
     db.refresh(db_case)
+    logger.info("Created case with id: %s", db_case.id)
 
     return db_case
 
@@ -60,6 +68,7 @@ def get_item(db: Session, case_id: int):
     Raises:
         HTTPException: If case is not found (404).
     """
+    logger.debug("Fetching case with id: %s", case_id)
     case = (
         db.query(DBCase)
         .options(joinedload(DBCase.applicant))
@@ -68,8 +77,10 @@ def get_item(db: Session, case_id: int):
     )
 
     if case is None:
+        logger.warning("Case not found with id: %s", case_id)
         raise HTTPException(status_code=404, detail="Case not found")
 
+    logger.info("Retrieved case with id: %s", case_id)
     # Handle case where applicant might be None
     applicant_data = None
     if case.applicant:
@@ -118,8 +129,10 @@ def update_item(db: Session, id: int, case: CaseUpdate):
     Raises:
         HTTPException: If case is not found (404).
     """
+    logger.debug("Updating case with id: %s", id)
     db_case = db.query(DBCase).filter(DBCase.id == id).first()
     if db_case is None:
+        logger.warning("Case not found for update with id: %s", id)
         raise HTTPException(status_code=404, detail="Case not found")
 
     if case.status is not None:
@@ -130,6 +143,7 @@ def update_item(db: Session, id: int, case: CaseUpdate):
     db.add(db_case)
     db.commit()
     db.refresh(db_case)
+    logger.info("Updated case with id: %s", id)
 
     return db_case
 
@@ -147,11 +161,14 @@ def delete_item(db: Session, id: int):
     Raises:
         HTTPException: If case is not found (404).
     """
+    logger.debug("Deleting case with id: %s", id)
     db_case = db.query(DBCase).filter(DBCase.id == id).first()
     if db_case is None:
+        logger.warning("Case not found for deletion with id: %s", id)
         raise HTTPException(status_code=404, detail="Case not found")
 
     db.query(DBCase).filter(DBCase.id == id).delete()
     db.commit()
+    logger.info("Deleted case with id: %s", id)
 
     return None
