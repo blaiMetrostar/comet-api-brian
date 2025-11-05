@@ -135,7 +135,7 @@ def update_item(db: Session, id: int, case: CaseUpdate):
         logger.warning("Case not found for update with id: %s", id)
         raise HTTPException(status_code=404, detail="Case not found")
 
-    # Dynamically update only the fields that are provided
+    # Update only the fields that are explicitly set in the request
     update_data = case.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_case, field, value)
