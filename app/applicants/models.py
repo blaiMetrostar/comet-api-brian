@@ -5,6 +5,12 @@ from app.db import Base
 
 
 class DBApplicant(Base):
+    """SQLAlchemy model for applicant data.
+
+    Represents an applicant in the database with personal information,
+    contact details, and address information.
+    """
+
     __tablename__ = "applicants"
 
     id = Column(Integer, primary_key=True, index=True)

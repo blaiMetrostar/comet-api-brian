@@ -5,6 +5,14 @@ from app.config import settings
 
 
 def get_db():
+    """Provide a database session for dependency injection.
+
+    Creates a database session, yields it for use in the request,
+    and ensures it is properly closed after the request completes.
+
+    Yields:
+        Session: SQLAlchemy database session.
+    """
     db = SessionLocal()
     try:
         yield db

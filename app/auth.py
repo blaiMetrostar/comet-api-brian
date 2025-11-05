@@ -7,6 +7,14 @@ from app.config import settings
 
 
 def get_keycloak_jwks():
+    """Retrieve JSON Web Key Set (JWKS) from Keycloak OIDC provider.
+
+    Fetches the well-known OIDC configuration from the configured URL
+    and retrieves the JWKS containing public keys for JWT validation.
+
+    Returns:
+        list: List of JSON Web Keys from the OIDC provider.
+    """
     keycloak_well_known_url = settings.OIDC_CONFIG_URL
     response = requests.get(keycloak_well_known_url)
     well_known_config = response.json()
@@ -17,6 +25,20 @@ def get_keycloak_jwks():
 
 
 def validate_jwt(token: str = Depends(get_keycloak_jwks)):
+    """Validate a JSON Web Token (JWT) using JWKS from the OIDC provider.
+
+    Extracts the key ID from the JWT header, finds the matching RSA key
+    in the JWKS, and decodes/validates the token.
+
+    Args:
+        token: JWT token to validate.
+
+    Returns:
+        dict: Decoded JWT payload containing user claims.
+
+    Raises:
+        HTTPException: If RSA key is not found (401) or JWT is invalid (401).
+    """
     header = get_unverified_header(token)
     jwks = get_keycloak_jwks()
 

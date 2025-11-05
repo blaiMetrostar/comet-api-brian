@@ -7,6 +7,16 @@ from app.utils import get_next_page, get_page_count, get_prev_page
 
 
 def get_items(db: Session, page_number: int, page_size: int):
+    """Retrieve a paginated list of cases.
+
+    Args:
+        db: Database session.
+        page_number: Current page number (0-indexed).
+        page_size: Number of items per page.
+
+    Returns:
+        dict: Paginated response containing cases and pagination metadata.
+    """
     item_count = db.query(DBCase).count()
     items = db.query(DBCase).limit(page_size).offset(page_number * page_size).all()
 
@@ -20,6 +30,15 @@ def get_items(db: Session, page_number: int, page_size: int):
 
 
 def create_item(db: Session, case: CaseCreate):
+    """Create a new case in the database.
+
+    Args:
+        db: Database session.
+        case: Case data to create.
+
+    Returns:
+        DBCase: The created case record.
+    """
     db_case = DBCase(**case.model_dump())
     db.add(db_case)
     db.commit()
@@ -29,6 +48,18 @@ def create_item(db: Session, case: CaseCreate):
 
 
 def get_item(db: Session, case_id: int):
+    """Retrieve a single case by ID with its associated applicant.
+
+    Args:
+        db: Database session.
+        case_id: ID of the case to retrieve.
+
+    Returns:
+        dict: Case data with applicant information.
+
+    Raises:
+        HTTPException: If case is not found (404).
+    """
     case = (
         db.query(DBCase)
         .options(joinedload(DBCase.applicant))
@@ -74,6 +105,19 @@ def get_item(db: Session, case_id: int):
 
 
 def update_item(db: Session, id: int, case: CaseUpdate):
+    """Update an existing case.
+
+    Args:
+        db: Database session.
+        id: ID of the case to update.
+        case: Updated case data.
+
+    Returns:
+        DBCase: The updated case record.
+
+    Raises:
+        HTTPException: If case is not found (404).
+    """
     db_case = db.query(DBCase).filter(DBCase.id == id).first()
     if db_case is None:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -91,6 +135,18 @@ def update_item(db: Session, id: int, case: CaseUpdate):
 
 
 def delete_item(db: Session, id: int):
+    """Delete a case from the database.
+
+    Args:
+        db: Database session.
+        id: ID of the case to delete.
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException: If case is not found (404).
+    """
     db_case = db.query(DBCase).filter(DBCase.id == id).first()
     if db_case is None:
         raise HTTPException(status_code=404, detail="Case not found")

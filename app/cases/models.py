@@ -6,6 +6,12 @@ from app.db import Base
 
 # SQLAlchemy Model
 class DBCase(Base):
+    """SQLAlchemy model for case data.
+
+    Represents a case in the database with status tracking,
+    assignment information, and a relationship to an applicant.
+    """
+
     __tablename__ = "cases"
 
     id = Column(Integer, primary_key=True, index=True)
