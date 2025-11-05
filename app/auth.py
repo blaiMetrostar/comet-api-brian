@@ -1,3 +1,5 @@
+import time
+
 import requests
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -7,12 +9,18 @@ from app.config import settings
 
 security = HTTPBearer()
 
+# JWKS cache with TTL (30 minutes = 1800 seconds)
+_jwks_cache: dict | None = None
+_jwks_cache_timestamp: float | None = None
+JWKS_CACHE_TTL = 1800
+
 
 def get_keycloak_jwks():
     """Retrieve JSON Web Key Set (JWKS) from Keycloak OIDC provider.
 
     Fetches the well-known OIDC configuration from the configured URL
     and retrieves the JWKS containing public keys for JWT validation.
+    JWKS is cached for 30 minutes to reduce redundant HTTP requests.
 
     Returns:
         list: List of JSON Web Keys from the OIDC provider.
@@ -20,6 +28,17 @@ def get_keycloak_jwks():
     Raises:
         HTTPException: If OIDC_CONFIG_URL is not configured or request fails.
     """
+    global _jwks_cache, _jwks_cache_timestamp
+
+    # Check if cache is valid
+    current_time = time.time()
+    if (
+        _jwks_cache is not None
+        and _jwks_cache_timestamp is not None
+        and current_time - _jwks_cache_timestamp < JWKS_CACHE_TTL
+    ):
+        return _jwks_cache
+
     keycloak_well_known_url = settings.OIDC_CONFIG_URL
 
     if not keycloak_well_known_url:
@@ -48,7 +67,13 @@ def get_keycloak_jwks():
         jwks_response = requests.get(jwks_url, timeout=5)
         jwks_response.raise_for_status()
         jwks = jwks_response.json()
-        return jwks["keys"]
+        jwks_keys = jwks["keys"]
+
+        # Update cache
+        _jwks_cache = jwks_keys
+        _jwks_cache_timestamp = current_time
+
+        return jwks_keys
     except requests.exceptions.RequestException as e:
         raise HTTPException(
             status_code=500,
