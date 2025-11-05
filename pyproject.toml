@@ -38,6 +38,7 @@ exclude = [
     ".venv",
     "venv",
     "docs",
+    "scripts",
     "__pycache",
     "**/migrations/*",
 ]
