@@ -160,7 +160,7 @@ ruff format .
 4. To convert the json into html, run the following:
 
 ```sh
-npx redoc-cli build docs/openapi.json --output docs/index.html
+npx @redocly/cli build-docs docs/openapi.json --output docs/index.html
 ```
 
 5. Commit the spec and html files and merge into `main` to publish docs
