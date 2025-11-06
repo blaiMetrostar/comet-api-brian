@@ -175,11 +175,31 @@ ruff format .
 
 ## Publishing Updated Docs
 
+Documentation is automatically updated via GitHub Actions when changes are pushed to the `main` branch.
+
+### Automated Process
+
+The GitHub Action workflow (`.github/workflows/update-docs.yaml`) automatically:
+
+1. Starts the API server
+2. Downloads the OpenAPI specification from `/openapi.json`
+3. Generates HTML documentation using `@redocly/cli`
+4. Commits and pushes the updated `docs/openapi.json` and `docs/index.html` files
+
+The workflow is triggered:
+
+- Automatically when changes to `app/**` files are pushed to `main`
+- Manually via the GitHub Actions UI (workflow_dispatch)
+
+### Manual Process (if needed)
+
+If you need to update docs manually:
+
 1. Access the swagger ReDocs by navigating to: `http://0.0.0.0:5000/redoc`
 
 2. Click the Download button
 
-3. Copy the downloaded file into the `comet-api/docs` directory
+3. Copy the downloaded file into the `docs` directory
 
 4. To convert the json into html, run the following:
 
@@ -205,4 +225,4 @@ The following provides a short list of tasks which are potential next steps for 
 - [ ] Update applicable endpoints to require JWT
 - [ ] Replace default database with external database (Ex. Postgres)
 - [ ] Deploy to cloud infrastructure
-- [ ] Automate doc publishing process
+- [x] Automate doc publishing process
