@@ -1,4 +1,3 @@
-# .github/workflows/update-api-docs.yml
 name: Update API Documentation
 
 on:
@@ -9,23 +8,12 @@ on:
       - "app/**"
   workflow_dispatch: # Allow manual triggering of the workflow
 
+permissions:
+  contents: write
+
 jobs:
   update-docs:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    services:
-      # Start your API service (adjust based on your setup)
-      api:
-        image: your-api-image:latest # Replace with your API Docker image
-        ports:
-          - 5000:5000
-        options: >-
-          --health-cmd "curl -f http://localhost:5000/health || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -33,69 +21,92 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # If you need to build and start your API locally instead of using a service
-      - name: Setup Node.js (if needed)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: "20"
 
-      # Alternative: Start API locally (uncomment if not using services above)
-      # - name: Install dependencies and start API
-      #   run: |
-      #     npm install
-      #     npm run start &
-      #     # Wait for API to be ready
-      #     sleep 30
-      #     curl --retry 10 --retry-delay 5 --retry-connrefused http://localhost:5000/health
-
-      - name: Wait for API to be ready
+      - name: Start API server
         run: |
+          # Start the API in the background
+          uvicorn app.main:app --host 0.0.0.0 --port 5000 &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> $GITHUB_ENV
+
+          # Wait for API to be ready
           echo "Waiting for API to be ready..."
-          timeout 60 bash -c 'until curl -f http://localhost:5000/redoc; do sleep 2; done'
+          for i in {1..30}; do
+            if curl -f http://localhost:5000/docs > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Attempt $i: API not ready yet, waiting..."
+            sleep 2
+          done
+
+          # Verify API is responding
+          if ! curl -f http://localhost:5000/docs > /dev/null 2>&1; then
+            echo "Error: API failed to start"
+            exit 1
+          fi
 
       - name: Download OpenAPI spec
         run: |
           # Create docs directory if it doesn't exist
-          mkdir -p comet-api/docs
+          mkdir -p docs
 
           # Download the OpenAPI spec
-          curl -o comet-api/docs/openapi.json http://localhost:5000/openapi.json
+          curl -o docs/openapi.json http://localhost:5000/openapi.json
 
           # Verify the file was downloaded and is valid JSON
-          if [ ! -f "comet-api/docs/openapi.json" ]; then
+          if [ ! -f "docs/openapi.json" ]; then
             echo "Error: Failed to download openapi.json"
             exit 1
           fi
 
           # Basic JSON validation
-          if ! python -m json.tool comet-api/docs/openapi.json > /dev/null; then
+          if ! python -m json.tool docs/openapi.json > /dev/null; then
             echo "Error: Downloaded file is not valid JSON"
             exit 1
           fi
 
           echo "Successfully downloaded OpenAPI spec"
 
-      - name: Install redoc-cli
-        run: npm install -g redoc-cli
-
       - name: Generate HTML documentation
         run: |
-          npx redoc-cli build comet-api/docs/openapi.json --output comet-api/docs/index.html
+          # Install and use redocly CLI
+          npx @redocly/cli build-docs docs/openapi.json --output docs/index.html
 
           # Verify HTML was generated
-          if [ ! -f "comet-api/docs/index.html" ]; then
+          if [ ! -f "docs/index.html" ]; then
             echo "Error: Failed to generate HTML documentation"
             exit 1
           fi
 
           echo "Successfully generated HTML documentation"
 
+      - name: Stop API server
+        if: always()
+        run: |
+          if [ -n "$API_PID" ]; then
+            kill $API_PID || true
+          fi
+
       - name: Check for changes
         id: check_changes
         run: |
           # Check if there are any changes to commit
-          if git diff --quiet comet-api/docs/; then
+          if git diff --quiet docs/; then
             echo "No changes detected in documentation"
             echo "changes=false" >> $GITHUB_OUTPUT
           else
@@ -107,11 +118,11 @@ jobs:
         if: steps.check_changes.outputs.changes == 'true'
         run: |
           # Configure git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
           # Add and commit changes
-          git add comet-api/docs/openapi.json comet-api/docs/index.html
+          git add docs/openapi.json docs/index.html
           git commit -m "docs: update API documentation [automated]
 
           - Updated OpenAPI specification
@@ -120,7 +131,7 @@ jobs:
           Generated by GitHub Actions on $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
           # Push changes
-          git push origin main
+          git push
 
       - name: Create summary
         run: |
@@ -135,6 +146,3 @@ jobs:
           else
             echo "ℹ️ No changes detected in documentation" >> $GITHUB_STEP_SUMMARY
           fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Documentation URL:** [View Docs](https://your-username.github.io/your-repo/comet-api/docs/)" >> $GITHUB_STEP_SUMMARY
