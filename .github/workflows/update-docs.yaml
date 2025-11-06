@@ -98,7 +98,7 @@ jobs:
       - name: Stop API server
         if: always()
         run: |
-          if [ ! -z "$API_PID" ]; then
+          if [ -n "$API_PID" ]; then
             kill $API_PID || true
           fi
 
