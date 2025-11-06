@@ -1,7 +1,9 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.admin.router import router as admin_router
 from app.applicants.router import router as applicants_router
@@ -32,6 +34,15 @@ logger.info("CORS middleware configured")
 # Create database
 Base.metadata.create_all(bind=engine)
 logger.info("Database tables created")
+
+
+# Root endpoint with API documentation links
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def root():
+    """Render an HTML page with links to API documentation."""
+    html_path = Path(__file__).parent / "templates" / "index.html"
+    return html_path.read_text()
+
 
 # Add routes
 app.include_router(cases_router)
