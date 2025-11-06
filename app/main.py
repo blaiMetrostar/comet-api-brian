@@ -35,13 +35,30 @@ logger.info("CORS middleware configured")
 Base.metadata.create_all(bind=engine)
 logger.info("Database tables created")
 
+# Load and cache the landing page template at startup
+_landing_page_template: str | None = None
+try:
+    html_path = Path(__file__).parent / "templates" / "index.html"
+    _landing_page_template = html_path.read_text()
+    logger.info("Landing page template loaded successfully")
+except Exception as e:
+    logger.error("Failed to load landing page template from %s: %s", html_path, e)
+
 
 # Root endpoint with API documentation links
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def root():
+def root():
     """Render an HTML page with links to API documentation."""
-    html_path = Path(__file__).parent / "templates" / "index.html"
-    return html_path.read_text()
+    if _landing_page_template is None:
+        logger.error("Landing page template not available")
+        return HTMLResponse(
+            content=(
+                "Error: Unable to load the homepage template. "
+                "Please contact the administrator."
+            ),
+            status_code=500,
+        )
+    return _landing_page_template
 
 
 # Add routes
