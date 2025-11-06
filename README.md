@@ -15,8 +15,8 @@ The goal of this project is to provide a Python-based starter API, which comes p
 ## Table of Contents
 
 1. [Running the Project Locally](#running-the-project-locally)
-2. [Initializing PostgreSQL Database](#initializing-postgresql-database)
-3. [Running with Docker](#running-with-docker)
+2. [Running with Docker](#running-with-docker)
+3. [Initializing PostgreSQL Database](#initializing-postgresql-database)
 4. [Running Unit Tests](#running-unit-tests)
 5. [Running Code Quality Checks](#running-code-quality-checks)
 6. [Running Code Formatting](#running-code-formatting)
@@ -25,6 +25,39 @@ The goal of this project is to provide a Python-based starter API, which comes p
 9. [Next Steps](#next-steps)
 
 ## Running the Project Locally
+
+To override default environment variables, add a `.env` file to the `comet-api` directory and update as needed (optional):
+
+```
+API_PREFIX=[SOME_ROUTE] # Ex: '/api'
+DATABASE_URL=[SOME_URL] # Ex: 'postgresql://username:password@localhost:5432/database_name'
+OIDC_CONFIG_URL=[SOME_URL] # Ex: 'https://keycloak.auth.metrostar.cloud/auth/realms/dev/.well-known/openid-configuration'
+LOG_LEVEL=[LOG_LEVEL] # Ex: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' (Default: 'INFO')
+```
+
+### Option 1: Using uv (recommended)
+
+1. To install project dependencies, run the following:
+
+```sh
+uv sync
+```
+
+2. To install dev dependencies, run the following:
+
+```sh
+uv sync --extra dev
+```
+
+3. To start the app, run the following:
+
+```sh
+uv run uvicorn app.main:app --reload --host=0.0.0.0 --port=5000
+```
+
+4. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+
+### Option 2: Using virtualenv and pip
 
 1. To create an environment, run the following:
 
@@ -45,22 +78,29 @@ pip install .
 pip install -e ".[dev]"
 ```
 
-4. To override default environment variables, add a file called `.env` to the `comet-api` directory and update as needed (optional):
-
-```
-API_PREFIX=[SOME_ROUTE] # Ex: '/api'
-DATABASE_URL=[SOME_URL] # Ex: 'postgresql://username:password@localhost:5432/database_name'
-OIDC_CONFIG_URL=[SOME_URL] # Ex: 'https://keycloak.auth.metrostar.cloud/auth/realms/dev/.well-known/openid-configuration'
-LOG_LEVEL=[LOG_LEVEL] # Ex: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' (Default: 'INFO')
-```
-
-5. To start the app, run the following:
+4. To start the app, run the following:
 
 ```sh
 uvicorn app.main:app --reload --host=0.0.0.0 --port=5000
 ```
 
-6. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+5. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+
+## Running with Docker
+
+1. To build the image, run the following:
+
+```sh
+docker build . -t comet-api
+```
+
+2. To run the container, run the following:
+
+```sh
+docker run -p 5000:5000 --name comet-api comet-api
+```
+
+3. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
 
 ## Initializing PostgreSQL Database
 
@@ -102,22 +142,6 @@ The script will:
 - Create the database if it doesn't exist
 - Run all Alembic migrations to set up the schema
 - Optionally seed initial data
-
-## Running with Docker
-
-1. To build the image, run the following:
-
-```sh
-docker build . -t comet-api
-```
-
-2. To run the container, run the following:
-
-```sh
-docker run -p 5000:5000 --name comet-api comet-api
-```
-
-3. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
 
 ## Running Unit Tests
 

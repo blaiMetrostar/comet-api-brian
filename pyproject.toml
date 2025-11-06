@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "Python Fast API for the Comet Starter App"
 readme = "README.md"
 license = {file = "LICENSE.md"}
+requires-python = ">=3.10"
 dependencies = [
   "alembic",
   "fastapi",
