@@ -12,11 +12,10 @@ from app.cases.schemas import (
     CaseUpdate,
     CaseWithApplicant,
 )
-from app.config import settings
 from app.db import get_db
 
 router = APIRouter(
-    prefix=f"{settings.API_PREFIX}/cases",
+    prefix="/cases",
     tags=["Cases"],
     responses={404: {"description": "Endpoint not found"}},
 )
@@ -25,7 +24,7 @@ router = APIRouter(
 db_session = Annotated[Session, Depends(get_db)]
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=CaseListResponse)
+@router.get("", status_code=status.HTTP_200_OK, response_model=CaseListResponse)
 async def get_cases(db: db_session, page_number: int = 0, page_size: int = 100):
     """Retrieve a paginated list of all cases.
 
@@ -40,7 +39,7 @@ async def get_cases(db: db_session, page_number: int = 0, page_size: int = 100):
     return service.get_items(db, page_number, page_size)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CaseResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=CaseResponse)
 async def create_case(case: CaseCreate, db: db_session):
     """Create a new case.
 

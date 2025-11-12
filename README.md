@@ -29,7 +29,7 @@ The goal of this project is to provide a Python-based starter API, which comes p
 To override default environment variables, add a `.env` file to the `comet-api` directory and update as needed (optional):
 
 ```
-API_PREFIX=[SOME_ROUTE] # Ex: '/api'
+ROOT_PATH=[SOME_ROUTE] # Ex: '/api'
 DATABASE_URL=[SOME_URL] # Ex: 'postgresql://username:password@localhost:5432/database_name'
 OIDC_CONFIG_URL=[SOME_URL] # Ex: 'https://keycloak.auth.metrostar.cloud/auth/realms/dev/.well-known/openid-configuration'
 LOG_LEVEL=[LOG_LEVEL] # Ex: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' (Default: 'INFO')
