@@ -11,7 +11,6 @@ from app.applicants.schemas import (
     ApplicantResponse,
     ApplicantUpdate,
 )
-from app.config import settings
 from app.db import get_db
 
 router = APIRouter(
