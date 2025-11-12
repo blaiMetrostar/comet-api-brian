@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env")
 
-    API_PREFIX: str = ""
+    ROOT_PATH: str = ""
     DATABASE_URL: str = "sqlite:///./db.sqlite3"
     OIDC_CONFIG_URL: str | None = None
     LOG_LEVEL: str = "INFO"

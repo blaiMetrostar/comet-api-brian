@@ -15,7 +15,7 @@ from app.config import settings
 from app.db import get_db
 
 router = APIRouter(
-    prefix=f"{settings.API_PREFIX}/applicants",
+    prefix="/applicants",
     tags=["Applicants"],
     responses={404: {"description": "Endpoint not found"}},
 )
@@ -24,7 +24,7 @@ router = APIRouter(
 db_session = Annotated[Session, Depends(get_db)]
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=ApplicantListResponse)
+@router.get("", status_code=status.HTTP_200_OK, response_model=ApplicantListResponse)
 async def get_applicants(db: db_session, page_number: int = 0, page_size: int = 100):
     """Retrieve a paginated list of all applicants.
 
@@ -39,7 +39,7 @@ async def get_applicants(db: db_session, page_number: int = 0, page_size: int = 
     return service.get_items(db, page_number, page_size)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ApplicantResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=ApplicantResponse)
 async def create_applicant(applicant: ApplicantCreate, db: db_session):
     """Create a new applicant.
 

@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.admin.router import router as admin_router
 from app.applicants.router import router as applicants_router
 from app.cases.router import router as cases_router
+from app.config import settings
 from app.db import Base, engine
 from app.health.router import router as health_router
 from app.utils import setup_logging
@@ -16,8 +17,11 @@ from app.utils import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
+# Set root path if specified in settings
+root_path = settings.ROOT_PATH if settings.ROOT_PATH else ""
+
 # Create the app
-app = FastAPI()
+app = FastAPI(root_path=root_path)
 logger.info("FastAPI application initialized")
 
 # Set up CORS middleware

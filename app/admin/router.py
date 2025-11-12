@@ -7,7 +7,7 @@ from app.auth import validate_jwt
 from app.config import settings
 
 router = APIRouter(
-    prefix=f"{settings.API_PREFIX}/admin",
+    prefix="/admin",
     tags=["Admin"],
 )
 
