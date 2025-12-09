@@ -52,10 +52,10 @@ uv sync --extra dev
 3. To start the app, run the following:
 
 ```sh
-uv run uvicorn app.main:app --reload --host=0.0.0.0 --port=5000
+uv run uvicorn app.main:app --reload --host=0.0.0.0 --port=8000
 ```
 
-4. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+4. Access the swagger docs by navigating to: `http://0.0.0.0:8000/docs`
 
 ### Option 2: Using virtualenv and pip
 
@@ -81,10 +81,10 @@ pip install -e ".[dev]"
 4. To start the app, run the following:
 
 ```sh
-uvicorn app.main:app --reload --host=0.0.0.0 --port=5000
+uvicorn app.main:app --reload --host=0.0.0.0 --port=8000
 ```
 
-5. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+5. Access the swagger docs by navigating to: `http://0.0.0.0:8000/docs`
 
 ## Running with Docker
 
@@ -97,10 +97,10 @@ docker build . -t comet-api
 2. To run the container, run the following:
 
 ```sh
-docker run -p 5000:5000 --name comet-api comet-api
+docker run -p 8000:8000 --name comet-api comet-api
 ```
 
-3. Access the swagger docs by navigating to: `http://0.0.0.0:5000/docs`
+3. Access the swagger docs by navigating to: `http://0.0.0.0:8000/docs`
 
 ## Initializing PostgreSQL Database
 
@@ -195,7 +195,7 @@ The workflow is triggered:
 
 If you need to update docs manually:
 
-1. Access the swagger ReDocs by navigating to: `http://0.0.0.0:5000/redoc`
+1. Access the swagger ReDocs by navigating to: `http://0.0.0.0:8000/redoc`
 
 2. Click the Download button
 

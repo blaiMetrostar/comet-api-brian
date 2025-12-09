@@ -39,14 +39,14 @@ jobs:
       - name: Start API server
         run: |
           # Start the API in the background
-          uvicorn app.main:app --host 0.0.0.0 --port 5000 &
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
 
           # Wait for API to be ready
           echo "Waiting for API to be ready..."
           for i in {1..30}; do
-            if curl -f http://localhost:5000/docs > /dev/null 2>&1; then
+            if curl -f http://localhost:8000/docs > /dev/null 2>&1; then
               echo "API is ready!"
               break
             fi
@@ -55,7 +55,7 @@ jobs:
           done
 
           # Verify API is responding
-          if ! curl -f http://localhost:5000/docs > /dev/null 2>&1; then
+          if ! curl -f http://localhost:8000/docs > /dev/null 2>&1; then
             echo "Error: API failed to start"
             exit 1
           fi
@@ -66,7 +66,7 @@ jobs:
           mkdir -p docs
 
           # Download the OpenAPI spec
-          curl -o docs/openapi.json http://localhost:5000/openapi.json
+          curl -o docs/openapi.json http://localhost:8000/openapi.json
 
           # Verify the file was downloaded and is valid JSON
           if [ ! -f "docs/openapi.json" ]; then
